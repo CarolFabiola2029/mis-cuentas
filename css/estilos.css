@@ -5,8 +5,9 @@
 @font-face { font-family: "Nunito Sans"; font-weight: 700; font-display: swap; src: url("../fonts/nunito-sans-700.woff2") format("woff2"); }
 @font-face { font-family: "Nunito Sans"; font-weight: 800; font-display: swap; src: url("../fonts/nunito-sans-800.woff2") format("woff2"); }
 
+/* Siempre el tema claro (pastel), aunque el teléfono esté en modo oscuro. */
 :root {
-  color-scheme: light;
+  color-scheme: only light;
   --fondo: #FBEFF3;
   --tarjeta: #FFFFFF;
   --texto: #3A2232;
@@ -34,32 +35,6 @@
   --seguro-izq: env(safe-area-inset-left, 0px);
   --seguro-der: env(safe-area-inset-right, 0px);
   --alto-acciones: calc(74px + var(--seguro-abajo));
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --fondo: #1E1419;
-    --tarjeta: #2A1D24;
-    --texto: #F6E9EF;
-    --texto-suave: #C9A9B8;
-    --separador: #3A2A33;
-    --acento: #F48FB8;
-    --sobre-acento: #2A1D24;
-    --rosa-1: #4A2B3A;
-    --rosa-2: #43283A;
-    --pista: #3A2731;
-    --pestanas: #2A1D24;
-    --gasto: #F28CA0;
-    --ingreso-fondo: #22382C;
-    --ingreso-texto: #8FD6AE;
-    --mover-fondo: #2E2742;
-    --mover-texto: #C3B5F0;
-    --principal: #9E2F5B;
-    --barra: rgba(30, 20, 25, 0.86);
-    --sombra: 0 6px 20px rgba(0, 0, 0, 0.25);
-    --sombra-fuerte: 0 14px 30px rgba(0, 0, 0, 0.4);
-  }
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
