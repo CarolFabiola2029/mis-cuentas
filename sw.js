@@ -1,6 +1,6 @@
 // Guarda todos los archivos para que la app funcione sin internet.
 // publicar.bat cambia VERSION en cada publicacion: asi el telefono detecta la novedad.
-const VERSION = 'v20261102-152205';
+const VERSION = 'v20261102-152230';
 const CACHE = `mis-cuentas-${VERSION}`;
 
 const ARCHIVOS = [
