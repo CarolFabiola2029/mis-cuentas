@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Mis Cuentas</title>
+  <meta name="description" content="Control de gastos personales">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="theme-color" content="#FFF1F5" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1E1419" media="(prefers-color-scheme: dark)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Mis Cuentas">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+  <div id="cargando" class="cargando">Mis Cuentas</div>
+  <div id="bienvenida"></div>
+
+  <div id="principal" hidden>
+    <nav class="pestanas" aria-label="Secciones">
+      <button type="button" class="activo" data-pestana="resumen" aria-current="page">Resumen</button>
+      <button type="button" data-pestana="evolucion">Evolución</button>
+      <button type="button" data-pestana="ajustes">Ajustes</button>
+    </nav>
+    <main id="pantalla"></main>
+    <div class="acciones">
+      <button type="button" class="accion gasto" data-registro="GASTO">− Gasto</button>
+      <button type="button" class="accion ingreso" data-registro="INGRESO">+ Ingreso</button>
+      <button type="button" class="accion transferencia" data-registro="TRANSFERENCIA">⇄ Mover</button>
+    </div>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
