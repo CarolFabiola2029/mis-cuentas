@@ -26,6 +26,11 @@ export function saldosPorCuenta(cuentas, movimientos, hasta = null) {
 export const deudaTarjeta = (cuenta, saldo) => Math.max(0, cuenta.lineaCredito - saldo);
 export const aFavorTarjeta = (cuenta, saldo) => Math.max(0, saldo - cuenta.lineaCredito);
 
+// Lo que se debe en todas las tarjetas activas (para el botón "Contando crédito").
+export const deudaTarjetas = (cuentas, saldos) => cuentas
+  .filter((c) => !c.archivada && esTarjeta(c))
+  .reduce((total, c) => total + deudaTarjeta(c, saldos.get(c.id)), 0);
+
 const sumaAlDisponible = (c) => !esTarjeta(c) && !c.noSumarAlDisponible;
 
 export function totalDisponible(cuentas, saldos) {

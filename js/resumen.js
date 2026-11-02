@@ -1,6 +1,6 @@
 // Pantalla Resumen (Inicio).
 import {
-  agruparPorDia, aFavorTarjeta, deudaTarjeta, esTarjeta, gastoEntre, gastoPorCategoria, gastosHoySemanaMes,
+  agruparPorDia, aFavorTarjeta, deudaTarjeta, deudaTarjetas, esTarjeta, gastoEntre, gastoPorCategoria, gastosHoySemanaMes,
   saldosPorCuenta, totalDisponible, ultimos7Dias,
 } from './calculos.js';
 import { E, nombreUsuaria, ponerAjuste } from './datos.js';
@@ -91,21 +91,39 @@ function saludo(repintar) {
 
 // --- Tarjeta principal ---
 
-function tarjetaPrincipal(total, gastos) {
+function tarjetaPrincipal(saldos, gastos) {
   const oculto = Boolean(E.ajustes.ocultarMontos);
+  const hayTarjeta = E.cuentas.some((c) => !c.archivada && esTarjeta(c));
+  // Con "Contando crédito" encendido, al total se le resta lo que se debe en la tarjeta.
+  const contandoCredito = hayTarjeta && Boolean(E.ajustes.contarCredito);
+  const deuda = deudaTarjetas(E.cuentas, saldos);
+  const total = totalDisponible(E.cuentas, saldos) - (contandoCredito ? deuda : 0);
   const excluidas = E.cuentas.filter((c) => !c.archivada && !esTarjeta(c) && c.noSumarAlDisponible)
     .map((c) => c.nombre.replace(/\s+BBVA$|\s+BCP$/i, ''));
-  const nota = excluidas.length
+  let nota = excluidas.length
     ? `No incluye ${excluidas.join(', ')} ni tarjeta de crédito`
     : 'No incluye tarjeta de crédito';
+  if (contandoCredito) {
+    nota = `Ya resta la deuda de la tarjeta (${monto(deuda)})${excluidas.length ? ` · no incluye ${excluidas.join(', ')}` : ''}`;
+  }
   return h(
     'section',
     { class: 'principal', 'aria-label': 'Dinero disponible' },
-    h('span', { class: 'principal-titulo' }, 'Dinero disponible'),
+    h(
+      'div',
+      { class: 'principal-cabecera' },
+      h('span', { class: 'principal-titulo' }, 'Dinero disponible'),
+      hayTarjeta && h('button', {
+        type: 'button',
+        class: `boton-credito ${contandoCredito ? 'activo' : ''}`,
+        'aria-pressed': String(contandoCredito),
+        onclick: () => ponerAjuste('contarCredito', !contandoCredito),
+      }, h('span', { class: 'circulo-credito', 'aria-hidden': 'true' }), 'Contando crédito'),
+    ),
     h(
       'div',
       { class: 'principal-fila' },
-      h('span', { class: 'principal-monto cifra' }, monto(total)),
+      h('span', { class: 'principal-monto cifra ajustable' }, monto(total)),
       h('button', {
         type: 'button',
         class: 'boton-ojo',
@@ -119,7 +137,7 @@ function tarjetaPrincipal(total, gastos) {
       'div',
       { class: 'principal-caja' },
       h('span', {}, titulo),
-      h('strong', { class: 'cifra' }, monto(valor)),
+      h('strong', { class: 'cifra ajustable' }, monto(valor)),
     ))),
   );
 }
@@ -277,7 +295,7 @@ export function pantallaResumen(repintar) {
   const activas = E.cuentas.filter((c) => !c.archivada);
   const vista = [
     saludo(repintar),
-    tarjetaPrincipal(totalDisponible(E.cuentas, saldos), gastosHoySemanaMes(E.movimientos, hoy)),
+    tarjetaPrincipal(saldos, gastosHoySemanaMes(E.movimientos, hoy)),
     pestanas('resumen'),
     necesitaCopia(hoy) && avisoCopia(),
     seccion(

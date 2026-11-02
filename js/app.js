@@ -5,7 +5,7 @@ import { alCambiar, E, iniciarDatos } from './datos.js';
 import { pantallaEvolucion } from './evolucion.js';
 import { abrirRegistro } from './registro.js';
 import { pantallaResumen } from './resumen.js';
-import { aviso, fijarCambioPestana, h, icono, vigilarTeclado } from './ui.js';
+import { ajustarTextos, aviso, fijarCambioPestana, h, icono, vigilarTeclado } from './ui.js';
 
 const PANTALLAS = {
   resumen: () => pantallaResumen(pintar),
@@ -20,6 +20,7 @@ const contenedor = document.getElementById('pantalla');
 function pintar() {
   if (!E.ajustes.bienvenidaHecha) return;
   contenedor.replaceChildren(...[PANTALLAS[pestana]()].flat(Infinity).filter(Boolean));
+  ajustarTextos(contenedor);
 }
 
 function cambiarPestana(nueva) {
@@ -84,6 +85,8 @@ async function iniciar() {
     b.addEventListener('click', () => abrirRegistro(b.dataset.registro));
   });
   vigilarTeclado();
+  window.addEventListener('resize', () => ajustarTextos(contenedor));
+  document.fonts?.ready.then(() => ajustarTextos(contenedor));
   alCambiar(pintar);
   // Si la app queda abierta de un día para otro, "Hoy" debe cambiar.
   document.addEventListener('visibilitychange', () => {

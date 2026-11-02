@@ -210,6 +210,18 @@ export function opcionesSelect(items, seleccionado, textoVacio) {
   ];
 }
 
+// Achica la letra de los montos marcados con "ajustable" hasta que entren completos.
+export function ajustarTextos(raiz = document) {
+  raiz.querySelectorAll('.ajustable').forEach((el) => {
+    el.style.fontSize = '';
+    let tamano = parseFloat(getComputedStyle(el).fontSize);
+    while (el.scrollWidth > el.clientWidth && tamano > 10) {
+      tamano -= 1;
+      el.style.fontSize = `${tamano}px`;
+    }
+  });
+}
+
 // Mantiene las hojas visibles sobre el teclado del iPhone.
 export function vigilarTeclado() {
   const vista = window.visualViewport;

@@ -7,7 +7,7 @@ import { fraseDelDia } from '../js/frase.js';
 import { frasesPorDia, generales } from '../js/frases.js';
 import { siglasCuentas } from '../js/ui.js';
 import {
-  agruparPorDia, deudaTarjeta, estadoLimites, gastoPorCategoria, gastosHoySemanaMes, limitesPasadosPor,
+  agruparPorDia, deudaTarjeta, deudaTarjetas, estadoLimites, gastoPorCategoria, gastosHoySemanaMes, limitesPasadosPor,
   normalizarMovimiento, rangoPeriodo,
   ordenarMovimientos, primerMes, saldosPorCuenta, serieMes, totalDisponible, totalEnFecha,
   ultimos7Dias, validarCopia, validarMovimiento,
@@ -101,6 +101,9 @@ igual('serie Excel', serieExcel('2026-11-01'), 46327);
   igual('deuda = línea − disponible', deudaTarjeta(cuentas[2], s.get('t')), 21000);
   igual('deuda nunca negativa', deudaTarjeta(cuentas[2], 120000), 0);
   igual('la tarjeta no suma al disponible', totalDisponible(cuentas, s), 10500);
+  igual('deuda total de tarjetas', deudaTarjetas(cuentas, s), 21000);
+  igual('contando crédito resta la deuda', totalDisponible(cuentas, s) - deudaTarjetas(cuentas, s), -10500);
+  igual('tarjeta archivada no cuenta en la deuda', deudaTarjetas(cuentas.map((c) => ({ ...c, archivada: true })), s), 0);
 }
 {
   const cuentas = [banco('a', 10000), banco('cts', 90000, { noSumarAlDisponible: true }), banco('ar', 500, { archivada: true, archivadaEn: '2026-10-15' })];

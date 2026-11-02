@@ -35,6 +35,12 @@ Si pasan más de 7 días sin copia, el Resumen muestra un aviso con un botón pa
 
 Antes de hacer cualquiera de las dos cosas, haz una copia.
 
+## Dinero disponible y la tarjeta de crédito
+
+Un gasto con la tarjeta de crédito no baja el **Dinero disponible**, porque ese dinero todavía no salió de tus cuentas: solo aumenta la deuda de la tarjeta.
+
+Para ver cuánto te quedaría si pagaras la tarjeta, toca **Contando crédito**, al lado de "Dinero disponible". Al total se le resta lo que debes en la tarjeta, y la nota de abajo dice cuánto se restó. Tócalo otra vez para volver al total normal. La app recuerda la elección.
+
 ## Límites de gasto
 
 Sirven para ponerle un tope a una categoría, por ejemplo **S/ 10.00 al mes en Dulces**.
