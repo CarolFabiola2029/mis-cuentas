@@ -12,10 +12,11 @@ export function formatoSoles(centimos) {
   return `${centimos < 0 ? '−' : ''}S/ ${conMiles(entero)}.${decimales}`;
 }
 
-// Etiqueta de las barras: con decimales si es menor a 100, sin "S/" para que quepa.
+// Etiqueta de las barras: con decimales si es menor a 100 (sin ceros de sobra: 32.5, 18),
+// y sin "S/" para que quepa.
 export function formatoCorto(centimos) {
   if (centimos === 0) return '0';
-  if (Math.abs(centimos) < 10000) return formatoSoles(centimos).replace('S/ ', '');
+  if (Math.abs(centimos) < 10000) return formatoSoles(centimos).replace('S/ ', '').replace(/\.?0+$/, '');
   return `${centimos < 0 ? '−' : ''}${conMiles(Math.round(Math.abs(centimos) / 100))}`;
 }
 

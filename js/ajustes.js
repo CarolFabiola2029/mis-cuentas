@@ -1,27 +1,32 @@
 // Pantalla Ajustes: cuentas, categorías, copia de seguridad y Excel.
 import { esTarjeta, movimientosDeCuenta, saldosPorCuenta } from './calculos.js';
 import {
-  archivarCuenta, E, eliminarCategoria, eliminarCuenta, fijarArchivoCategoria, guardarCategoria, guardarCuenta,
-  mover, nuevoId, ordenNuevaCategoria, ordenNuevaCuenta, restaurarCuenta,
+  archivarCuenta, colorNuevaCategoria, colorNuevaCuenta, E, eliminarCategoria, eliminarCuenta, fijarArchivoCategoria,
+  guardarCategoria, guardarCuenta, mover, nombreUsuaria, nuevoId, ordenNuevaCategoria, ordenNuevaCuenta, ponerAjuste,
+  restaurarCuenta,
 } from './datos.js';
 import { aCentimos, aTexto, formatoSoles } from './dinero.js';
+import { ICONOS_CATEGORIA } from './iconos.js';
 import { cargarXlsx, exportarExcel, hacerCopia, restaurarDesdeArchivo } from './respaldo.js';
 import {
-  abrirCapa, aviso, campo, campoMonto, confirmar, h, iconos, informar, monto, preguntar, tarjeta,
+  abrirCapa, aviso, campo, campoMonto, confirmar, cuadroCuenta, cuadroIcono, h, icono, informar, monto, pestanas, preguntar,
+  seccion,
 } from './ui.js';
 
 const TIPOS_CUENTA = [['BANCO', 'Banco'], ['EFECTIVO', 'Efectivo'], ['TARJETA_CREDITO', 'Tarjeta']];
-const EMOJIS = ['🍽️', '🛒', '☕', '🚌', '🚕', '⛽', '🎉', '🎬', '👗', '💄', '💊', '🏥', '🏠', '💡', '📱', '🎁', '✈️', '🐶', '📚', '💳', '💼', '💰', '➕', '❓'];
 const NOMBRES_TIPO = { BANCO: 'Banco', EFECTIVO: 'Efectivo', TARJETA_CREDITO: 'Tarjeta de crédito' };
 
 let tipoCategoria = 'GASTO';
+
+// Título de sección fuera de la tarjeta blanca, como en el Resumen.
+const bloque = (titulo, ...contenido) => seccion(titulo, h('div', { class: 'tarjeta' }, contenido));
 
 const cabeceraHoja = (titulo, cerrar) => h(
   'header',
   { class: 'hoja-cabecera' },
   h('span', { class: 'boton-icono' }),
   h('strong', {}, titulo),
-  h('button', { type: 'button', class: 'boton-icono', 'aria-label': 'Cerrar', onclick: cerrar }, iconos.cerrar()),
+  h('button', { type: 'button', class: 'boton-icono', 'aria-label': 'Cerrar', onclick: cerrar }, icono('cerrar')),
 );
 
 const flechas = (nombre, lista, almacen, indice, id) => h(
@@ -30,11 +35,11 @@ const flechas = (nombre, lista, almacen, indice, id) => h(
   h('button', {
     type: 'button', class: 'boton-icono', 'aria-label': `Subir ${nombre}`,
     disabled: indice === 0, onclick: () => mover(almacen, lista, id, -1),
-  }, iconos.subir()),
+  }, icono('subir')),
   h('button', {
     type: 'button', class: 'boton-icono', 'aria-label': `Bajar ${nombre}`,
     disabled: indice === lista.length - 1, onclick: () => mover(almacen, lista, id, 1),
-  }, iconos.bajar()),
+  }, icono('bajar')),
 );
 
 // --- Cuentas ---
@@ -60,7 +65,7 @@ function abrirFormularioCuenta(cuenta) {
     if (lineaCredito === null) { error.textContent = 'Revisa la línea de crédito.'; return; }
     try {
       await guardarCuenta({
-        ...(cuenta ?? { id: nuevoId(), orden: ordenNuevaCuenta(), archivada: false, archivadaEn: '' }),
+        ...(cuenta ?? { id: nuevoId(), orden: ordenNuevaCuenta(), color: colorNuevaCuenta(), archivada: false, archivadaEn: '' }),
         nombre,
         tipo: b.tipo,
         saldoInicial,
@@ -160,7 +165,7 @@ function seccionCuentas() {
   const saldos = saldosPorCuenta(E.cuentas, E.movimientos);
   const activas = E.cuentas.filter((c) => !c.archivada);
   const archivadas = E.cuentas.filter((c) => c.archivada);
-  return tarjeta(
+  return bloque(
     'Mis cuentas',
     h('ul', { class: 'lista-ajustes' }, activas.map((c, i) => h(
       'li',
@@ -168,8 +173,18 @@ function seccionCuentas() {
       h(
         'button',
         { type: 'button', class: 'fila-ajuste', onclick: () => abrirFormularioCuenta(c) },
-        h('span', {}, h('strong', {}, c.nombre), h('small', {}, NOMBRES_TIPO[c.tipo], c.noSumarAlDisponible && ' · No suma')),
-        h('span', { class: 'cifra' }, monto(saldos.get(c.id))),
+        cuadroCuenta(c),
+        h(
+          'span',
+          { class: 'fila-texto' },
+          h('strong', {}, c.nombre),
+          h(
+            'small',
+            {},
+            `${NOMBRES_TIPO[c.tipo]}${c.noSumarAlDisponible ? ' · No suma' : ''} · `,
+            h('span', { class: 'cifra' }, monto(saldos.get(c.id))),
+          ),
+        ),
       ),
       flechas(c.nombre, activas, 'cuentas', i, c.id),
     ))),
@@ -179,7 +194,7 @@ function seccionCuentas() {
       h('ul', { class: 'lista-ajustes' }, archivadas.map((c) => h(
         'li',
         {},
-        h('span', { class: 'fila-ajuste' }, h('span', {}, h('strong', {}, c.nombre), h('small', {}, NOMBRES_TIPO[c.tipo]))),
+        h('span', { class: 'fila-ajuste' }, cuadroCuenta(c), h('span', { class: 'fila-texto' }, h('strong', {}, c.nombre), h('small', {}, NOMBRES_TIPO[c.tipo]))),
         h('button', { type: 'button', class: 'boton-chico', onclick: () => restaurarCuenta(c).then(() => aviso('Cuenta restaurada', 'exito')) }, 'Restaurar'),
       ))),
     ],
@@ -188,26 +203,19 @@ function seccionCuentas() {
 
 // --- Categorías ---
 
-const primerGrafema = (texto) => {
-  const limpio = texto.trim();
-  return limpio ? [...new Intl.Segmenter('es').segment(limpio)][0].segment : '';
-};
-
 function abrirFormularioCategoria(categoria, tipo) {
   const nueva = !categoria;
-  const b = { nombre: categoria?.nombre ?? '', emoji: categoria?.emoji ?? '' };
+  const b = { nombre: categoria?.nombre ?? '', icono: categoria?.icono ?? 'puntos' };
   const { panel, cerrar } = abrirCapa({ etiqueta: nueva ? 'Agregar categoría' : 'Editar categoría' });
 
   async function guardar(error) {
     const nombre = b.nombre.trim();
-    const emoji = primerGrafema(b.emoji);
     if (!nombre) { error.textContent = 'Escribe el nombre de la categoría.'; return; }
-    if (!emoji) { error.textContent = 'Elige un emoji.'; return; }
     try {
       await guardarCategoria({
-        ...(categoria ?? { id: nuevoId(), tipo, orden: ordenNuevaCategoria(), archivada: false }),
+        ...(categoria ?? { id: nuevoId(), tipo, orden: ordenNuevaCategoria(), color: colorNuevaCategoria(), archivada: false }),
         nombre,
-        emoji,
+        icono: b.icono,
       });
       cerrar();
       aviso(nueva ? 'Categoría agregada' : 'Categoría actualizada', 'exito');
@@ -226,7 +234,7 @@ function abrirFormularioCategoria(categoria, tipo) {
       titulo: `¿A qué categoría pasan los ${usadas}?`,
       mensaje: `Luego se eliminará ${categoria.nombre}.`,
       acciones: [
-        ...otras.map((c) => ({ texto: `${c.emoji} ${c.nombre}`, valor: c.id })),
+        ...otras.map((c) => ({ texto: c.nombre, valor: c.id })),
         { texto: 'Cancelar', valor: null },
       ],
     });
@@ -265,22 +273,29 @@ function abrirFormularioCategoria(categoria, tipo) {
   }
 
   const error = h('p', { class: 'error', role: 'alert' });
-  const entradaEmoji = h('input', {
-    type: 'text', value: b.emoji, class: 'entrada-emoji', 'aria-label': 'Emoji',
-    oninput: (e) => { b.emoji = e.target.value; },
-  });
+  const rejilla = h('div', { class: 'rejilla-iconos', role: 'radiogroup', 'aria-label': 'Ícono' }, ICONOS_CATEGORIA.map(([nombreIcono, etiqueta]) => h('button', {
+    type: 'button',
+    role: 'radio',
+    class: `tecla-icono ${b.icono === nombreIcono ? 'elegida' : ''}`,
+    'aria-checked': String(b.icono === nombreIcono),
+    'aria-label': etiqueta,
+    onclick: (e) => {
+      b.icono = nombreIcono;
+      rejilla.querySelectorAll('.tecla-icono').forEach((t) => {
+        const elegida = t === e.currentTarget;
+        t.classList.toggle('elegida', elegida);
+        t.setAttribute('aria-checked', String(elegida));
+      });
+    },
+  }, icono(nombreIcono))));
   panel.replaceChildren(
     cabeceraHoja(nueva ? 'Agregar categoría' : 'Editar categoría', cerrar),
     h(
       'div',
       { class: 'hoja-cuerpo' },
       campo('Nombre', h('input', { type: 'text', maxlength: 30, value: b.nombre, oninput: (e) => { b.nombre = e.target.value; } })),
-      campo('Emoji', entradaEmoji),
-      h('div', { class: 'rejilla-emojis' }, EMOJIS.map((emoji) => h('button', {
-        type: 'button',
-        class: 'tecla-emoji',
-        onclick: () => { b.emoji = emoji; entradaEmoji.value = emoji; },
-      }, emoji))),
+      h('span', { class: 'campo-titulo' }, 'Ícono'),
+      rejilla,
       error,
       h('button', { type: 'button', class: 'boton primario', onclick: () => guardar(error) }, 'Guardar'),
       h('button', { type: 'button', class: 'boton suave', onclick: cerrar }, 'Cancelar'),
@@ -293,7 +308,7 @@ function seccionCategorias(repintar) {
   const delTipo = E.categorias.filter((c) => c.tipo === tipoCategoria);
   const activas = delTipo.filter((c) => !c.archivada);
   const archivadas = delTipo.filter((c) => c.archivada);
-  return tarjeta(
+  return bloque(
     'Categorías',
     h('div', { class: 'segmentos', role: 'group', 'aria-label': 'Tipo de categoría' }, [['GASTO', 'Gasto'], ['INGRESO', 'Ingreso']].map(([valor, texto]) => h('button', {
       type: 'button',
@@ -307,7 +322,8 @@ function seccionCategorias(repintar) {
       h(
         'button',
         { type: 'button', class: 'fila-ajuste', onclick: () => abrirFormularioCategoria(c, c.tipo) },
-        h('span', {}, h('strong', {}, `${c.emoji} ${c.nombre}`)),
+        cuadroIcono(c.icono, c.color),
+        h('span', { class: 'fila-texto' }, h('strong', {}, c.nombre)),
       ),
       flechas(c.nombre, activas, 'categorias', i, c.id),
     ))),
@@ -317,7 +333,7 @@ function seccionCategorias(repintar) {
       h('ul', { class: 'lista-ajustes' }, archivadas.map((c) => h(
         'li',
         {},
-        h('span', { class: 'fila-ajuste' }, h('span', {}, h('strong', {}, `${c.emoji} ${c.nombre}`))),
+        h('span', { class: 'fila-ajuste' }, cuadroIcono(c.icono, c.color), h('span', { class: 'fila-texto' }, h('strong', {}, c.nombre))),
         h('button', { type: 'button', class: 'boton-chico', onclick: () => fijarArchivoCategoria(c, false).then(() => aviso('Categoría restaurada', 'exito')) }, 'Restaurar'),
       ))),
     ],
@@ -345,7 +361,7 @@ export const botonRestaurar = (texto, clase, alTerminar) => h(
 
 function seccionRespaldo() {
   const ultima = E.ajustes.ultimaCopia;
-  return tarjeta(
+  return bloque(
     'Copia de seguridad',
     h('p', { class: 'nota' }, ultima
       ? `Última copia: ${new Date(ultima).toLocaleDateString('es-PE')}`
@@ -356,14 +372,40 @@ function seccionRespaldo() {
 }
 
 function seccionExcel() {
-  return tarjeta(
+  return bloque(
     'Exportar a Excel',
     h('p', { class: 'nota' }, 'Crea un archivo con las hojas Movimientos y Saldos para guardarlo o enviarlo.'),
     h('button', { type: 'button', class: 'boton suave', onclick: exportarExcel }, 'Exportar a Excel'),
   );
 }
 
+function seccionNombre() {
+  const error = h('p', { class: 'error', role: 'alert' });
+  const entrada = h('input', { type: 'text', maxlength: 24, value: nombreUsuaria(), autocomplete: 'given-name', enterkeyhint: 'done' });
+  async function guardar() {
+    const nombre = entrada.value.trim();
+    if (!nombre) { error.textContent = 'Escribe un nombre.'; return; }
+    if (nombre === nombreUsuaria()) return;
+    await ponerAjuste('nombreUsuaria', nombre);
+    aviso('Nombre guardado', 'exito');
+  }
+  entrada.addEventListener('change', guardar);
+  return bloque(
+    'Tu nombre',
+    campo('Se usa en el saludo y en el círculo con la inicial', entrada),
+    error,
+  );
+}
+
 export function pantallaAjustes(repintar) {
   cargarXlsx().catch(() => {});
-  return [seccionCuentas(), seccionCategorias(repintar), seccionRespaldo(), seccionExcel()];
+  return [
+    h('h1', { class: 'titulo titulo-pantalla' }, 'Ajustes'),
+    pestanas('ajustes'),
+    seccionNombre(),
+    seccionCuentas(),
+    seccionCategorias(repintar),
+    seccionRespaldo(),
+    seccionExcel(),
+  ];
 }

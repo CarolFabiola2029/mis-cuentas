@@ -4,7 +4,7 @@ import { E, eliminarMovimiento, guardarMovimiento } from './datos.js';
 import { aCentimos, aTexto } from './dinero.js';
 import { fechaHoy } from './fechas.js';
 import {
-  abrirCapa, aviso, campo, campoMonto, confirmar, h, iconos, opcionesSelect, vibrar,
+  abrirCapa, aviso, campo, campoMonto, confirmar, h, icono, opcionesSelect, vibrar,
 } from './ui.js';
 
 const TIPOS = [['GASTO', 'Gasto'], ['INGRESO', 'Ingreso'], ['TRANSFERENCIA', 'Transferencia']];
@@ -20,7 +20,7 @@ export function abrirEdicion(original) {
   const cuentasPara = (actual) => E.cuentas.filter((c) => !c.archivada || c.id === actual).map(opcionCuenta);
   const categoriasPara = (tipo, actual) => E.categorias
     .filter((c) => c.tipo === tipo && (!c.archivada || c.id === actual))
-    .map((c) => ({ valor: c.id, texto: `${c.emoji} ${c.nombre}` }));
+    .map((c) => ({ valor: c.id, texto: c.nombre }));
 
   function cambiarTipo(tipo) {
     if (tipo === b.tipo) return;
@@ -70,7 +70,7 @@ export function abrirEdicion(original) {
         { class: 'hoja-cabecera' },
         h('span', { class: 'boton-icono' }),
         h('strong', {}, 'Editar movimiento'),
-        h('button', { type: 'button', class: 'boton-icono', 'aria-label': 'Cerrar', onclick: cerrar }, iconos.cerrar()),
+        h('button', { type: 'button', class: 'boton-icono', 'aria-label': 'Cerrar', onclick: cerrar }, icono('cerrar')),
       ),
       h(
         'div',

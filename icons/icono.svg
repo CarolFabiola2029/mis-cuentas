@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
-  <rect width="1024" height="1024" fill="#FFF5EA"/>
-  <circle cx="512" cy="512" r="372" fill="none" stroke="#E0558A" stroke-width="20"/>
-  <text x="512" y="660" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-weight="700" font-size="400" letter-spacing="-10" fill="#E0558A">S/</text>
+  <rect width="1024" height="1024" fill="#FBEFF3"/>
+  <path transform="translate(-16 -50) scale(44)" fill="#C93D6E" d="M12 20s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.3 4.3 4.3 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10z"/>
+  <text x="512" y="578" text-anchor="middle" font-family="'Playfair Display', Georgia, serif" font-weight="600" font-size="230" fill="#FBEFF3">S/</text>
 </svg>

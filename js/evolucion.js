@@ -3,7 +3,7 @@ import { primerMes, serieMes } from './calculos.js';
 import { E } from './datos.js';
 import { fechaHoy, inicioDeMes, mesAnterior, mesSiguiente, nombreMes } from './fechas.js';
 import { lineaSaldo } from './graficos.js';
-import { h, iconos, monto, tarjeta } from './ui.js';
+import { h, icono, monto, pestanas, seccion } from './ui.js';
 
 let mesElegido = null;
 
@@ -33,29 +33,35 @@ export function pantallaEvolucion(repintar) {
   ];
 
   return [
+    h('h1', { class: 'titulo titulo-pantalla' }, 'Evolución'),
+    pestanas('evolucion'),
     h(
       'div',
       { class: 'selector-mes' },
       h('button', {
         type: 'button', class: 'boton-icono', 'aria-label': 'Mes anterior',
         disabled: mes <= minimo, onclick: () => cambiarMes(mesAnterior(mes)),
-      }, iconos.atras()),
+      }, icono('atras')),
       h('strong', {}, nombreMes(mes)),
       h('button', {
         type: 'button', class: 'boton-icono', 'aria-label': 'Mes siguiente',
         disabled: esActual, onclick: () => cambiarMes(mesSiguiente(mes)),
-      }, iconos.adelante()),
+      }, icono('adelante')),
     ),
-    tarjeta(
+    seccion(
       'Saldo total día a día',
-      lineaSaldo(serie, hoy),
-      h('p', { class: 'nota' }, 'La línea punteada marca el saldo con que empezó el mes.'),
+      h(
+        'div',
+        { class: 'tarjeta' },
+        lineaSaldo(serie, hoy),
+        h('p', { class: 'nota' }, 'La línea punteada marca el saldo con que empezó el mes.'),
+      ),
     ),
-    h('section', { class: 'datos-mes' }, datos.map(([titulo, valor, clase]) => h(
+    seccion('Resumen del mes', h('dl', { class: 'tarjeta datos-mes' }, datos.map(([titulo, valor, clase]) => h(
       'div',
       { class: 'dato' },
-      h('span', {}, titulo),
-      h('strong', { class: `cifra ${clase ?? ''}` }, valor),
-    ))),
+      h('dt', {}, titulo),
+      h('dd', { class: `cifra ${clase ?? ''}` }, valor),
+    )))),
   ];
 }

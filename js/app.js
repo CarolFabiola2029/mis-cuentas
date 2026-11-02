@@ -5,10 +5,10 @@ import { alCambiar, E, iniciarDatos } from './datos.js';
 import { pantallaEvolucion } from './evolucion.js';
 import { abrirRegistro } from './registro.js';
 import { pantallaResumen } from './resumen.js';
-import { aviso, h, vigilarTeclado } from './ui.js';
+import { aviso, fijarCambioPestana, h, icono, vigilarTeclado } from './ui.js';
 
 const PANTALLAS = {
-  resumen: () => pantallaResumen(),
+  resumen: () => pantallaResumen(pintar),
   evolucion: () => pantallaEvolucion(pintar),
   ajustes: () => pantallaAjustes(pintar),
 };
@@ -23,12 +23,8 @@ function pintar() {
 }
 
 function cambiarPestana(nueva) {
+  if (nueva === pestana) return;
   pestana = nueva;
-  document.querySelectorAll('[data-pestana]').forEach((b) => {
-    const activa = b.dataset.pestana === nueva;
-    b.classList.toggle('activo', activa);
-    b.setAttribute('aria-current', activa ? 'page' : 'false');
-  });
   pintar();
   window.scrollTo(0, 0);
 }
@@ -81,10 +77,10 @@ async function registrarTrabajador() {
 }
 
 async function iniciar() {
-  document.querySelectorAll('[data-pestana]').forEach((b) => {
-    b.addEventListener('click', () => cambiarPestana(b.dataset.pestana));
-  });
+  fijarCambioPestana(cambiarPestana);
+  const ICONOS_REGISTRO = { GASTO: 'menos', INGRESO: 'mas', TRANSFERENCIA: 'flechas' };
   document.querySelectorAll('[data-registro]').forEach((b) => {
+    b.prepend(icono(ICONOS_REGISTRO[b.dataset.registro], { tamano: 20 }));
     b.addEventListener('click', () => abrirRegistro(b.dataset.registro));
   });
   vigilarTeclado();

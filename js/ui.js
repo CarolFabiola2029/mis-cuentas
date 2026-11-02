@@ -1,6 +1,10 @@
 // Piezas de pantalla: creación de elementos, avisos, hojas y ventanas de confirmación.
 import { E } from './datos.js';
 import { formatoSoles, MASCARA } from './dinero.js';
+import { icono } from './iconos.js';
+import { colorDe } from './paleta.js';
+
+export { icono };
 
 export function h(etiqueta, props, ...hijos) {
   const el = document.createElement(etiqueta);
@@ -26,37 +30,78 @@ export function s(etiqueta, props, ...hijos) {
   return el;
 }
 
-const trazo = (...hijos) => s('svg', {
-  viewBox: '0 0 24 24', width: 24, height: 24, fill: 'none', stroke: 'currentColor',
-  'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'aria-hidden': 'true',
-}, hijos);
-
-export const iconos = {
-  ojo: () => trazo(
-    s('path', { d: 'M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z' }),
-    s('circle', { cx: 12, cy: 12, r: 3 }),
-  ),
-  ojoTachado: () => trazo(
-    s('path', { d: 'M10.6 5.1A10 10 0 0 1 12 5c6.4 0 10 7 10 7a18 18 0 0 1-3.2 4.2M6.6 6.6A17.7 17.7 0 0 0 2 12s3.6 7 10 7a10 10 0 0 0 5.4-1.6' }),
-    s('path', { d: 'M9.9 9.9a3 3 0 0 0 4.2 4.2' }),
-    s('line', { x1: 3, y1: 3, x2: 21, y2: 21 }),
-  ),
-  atras: () => trazo(s('path', { d: 'M15 18l-6-6 6-6' })),
-  adelante: () => trazo(s('path', { d: 'M9 18l6-6-6-6' })),
-  cerrar: () => trazo(s('path', { d: 'M18 6L6 18M6 6l12 12' })),
-  subir: () => trazo(s('path', { d: 'M18 15l-6-6-6 6' })),
-  bajar: () => trazo(s('path', { d: 'M6 9l6 6 6-6' })),
-  borrar: () => trazo(
-    s('path', { d: 'M21 5H9l-6 7 6 7h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1z' }),
-    s('path', { d: 'M17 9.5l-5 5M12 9.5l5 5' }),
-  ),
-};
-
 // Monto para mostrar, respetando el botón del ojo.
 export const monto = (centimos) => (E.ajustes.ocultarMontos ? MASCARA : formatoSoles(centimos));
 
 export function tarjeta(titulo, ...contenido) {
   return h('section', { class: 'tarjeta' }, titulo && h('h2', {}, titulo), contenido);
+}
+
+// Bloque con título fuera de la tarjeta blanca, como en el diseño.
+export const seccion = (titulo, ...contenido) => h('section', { class: 'seccion' }, h('h2', { class: 'titulo-seccion' }, titulo), contenido);
+
+export function iniciales(nombre) {
+  const palabras = nombre.trim().split(/\s+/).filter(Boolean);
+  if (palabras.length === 0) return '?';
+  if (palabras.length === 1) return Array.from(palabras[0]).slice(0, 2).join('').toUpperCase();
+  return (Array.from(palabras[0])[0] + Array.from(palabras[1])[0]).toUpperCase();
+}
+
+// Siglas de cada cuenta: "Yape" → YA, "CTS BBVA" → CT. Si la primera palabra se repite
+// ("Sueldo BCP", "Sueldo BBVA"), se usa la inicial y una letra de la segunda que las distinga: SB, SV.
+export function siglasCuentas(cuentas) {
+  const letras = (texto) => Array.from(texto.toUpperCase()).filter((l) => /\p{L}|\d/u.test(l));
+  const palabras = cuentas.map((c) => c.nombre.trim().split(/\s+/).filter(Boolean));
+  const primeras = palabras.map((p) => (p[0] ?? '').toUpperCase());
+  const usadas = new Set();
+  const siglas = new Map();
+  cuentas.forEach((cuenta, i) => {
+    const [primera = '?', ...resto] = palabras[i];
+    const repetida = primeras.filter((x) => x === primeras[i]).length > 1;
+    const inicial = letras(primera)[0] ?? '?';
+    const opciones = repetida && resto.length
+      ? letras(resto.join('')).map((l) => inicial + l)
+      : letras(primera).slice(1).map((l) => inicial + l);
+    const sigla = opciones.find((o) => !usadas.has(o)) ?? opciones[0] ?? inicial;
+    usadas.add(sigla);
+    siglas.set(cuenta.id, sigla);
+  });
+  return siglas;
+}
+
+// Cuadrado de color con las iniciales de la cuenta (la tarjeta lleva su ícono).
+export function cuadroCuenta(cuenta, tamano = 38) {
+  const color = colorDe(cuenta.color);
+  return h(
+    'span',
+    { class: 'cuadro', style: `--cuadro-fondo:${color.fondo};--cuadro-texto:${color.texto};--cuadro-lado:${tamano}px`, 'aria-hidden': 'true' },
+    cuenta.tipo === 'TARJETA_CREDITO'
+      ? icono('tarjeta', { tamano: Math.round(tamano * 0.52) })
+      : siglasCuentas(E.cuentas.some((c) => c.id === cuenta.id) ? E.cuentas : [cuenta]).get(cuenta.id),
+  );
+}
+
+// Cuadrado de color con el ícono de una categoría.
+export function cuadroIcono(nombreIcono, claveColor, tamano = 38) {
+  const color = claveColor ? colorDe(claveColor) : null;
+  const estilo = color ? `--cuadro-fondo:${color.fondo};--cuadro-texto:${color.texto};` : '';
+  return h(
+    'span',
+    { class: `cuadro ${color ? '' : 'cuadro-rosa'}`, style: `${estilo}--cuadro-lado:${tamano}px`, 'aria-hidden': 'true' },
+    icono(nombreIcono, { tamano: Math.round(tamano * 0.5) }),
+  );
+}
+
+// Control segmentado de pestañas. "alCambiar" lo pone app.js.
+let alCambiarPestana = () => {};
+export const fijarCambioPestana = (fn) => { alCambiarPestana = fn; };
+export function pestanas(activa) {
+  return h('nav', { class: 'pestanas', 'aria-label': 'Secciones' }, [['resumen', 'Resumen'], ['evolucion', 'Evolución'], ['ajustes', 'Ajustes']].map(([clave, texto]) => h('button', {
+    type: 'button',
+    class: clave === activa ? 'activo' : '',
+    'aria-current': clave === activa ? 'page' : 'false',
+    onclick: () => alCambiarPestana(clave),
+  }, texto)));
 }
 
 // --- Avisos breves ---

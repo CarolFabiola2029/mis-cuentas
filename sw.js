@@ -1,6 +1,6 @@
 // Guarda todos los archivos para que la app funcione sin internet.
 // publicar.bat cambia VERSION en cada publicacion: asi el telefono detecta la novedad.
-const VERSION = 'v20261102-152856';
+const VERSION = 'v20261102-161011';
 const CACHE = `mis-cuentas-${VERSION}`;
 
 const ARCHIVOS = [
@@ -17,11 +17,20 @@ const ARCHIVOS = [
   'js/editar.js',
   'js/evolucion.js',
   'js/fechas.js',
+  'js/frase.js',
+  'js/frases.js',
   'js/graficos.js',
+  'js/iconos.js',
+  'js/paleta.js',
   'js/registro.js',
   'js/respaldo.js',
   'js/resumen.js',
   'js/ui.js',
+  'fonts/nunito-sans-400.woff2',
+  'fonts/nunito-sans-600.woff2',
+  'fonts/nunito-sans-700.woff2',
+  'fonts/nunito-sans-800.woff2',
+  'fonts/playfair-display-600.woff2',
   'vendor/idb.js',
   'vendor/xlsx.mini.min.js',
   'icons/apple-touch-icon.png',

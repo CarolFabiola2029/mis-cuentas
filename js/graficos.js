@@ -11,7 +11,7 @@ export function barras7Dias(dias, hoy) {
   const techo = 24;
   const base = alto - 24;
   const paso = ANCHO / 7;
-  const ancho = 24;
+  const ancho = 28;
   const maximo = Math.max(...dias.map((d) => d.monto), 1);
   const oculto = E.ajustes.ocultarMontos;
   const descripcion = dias.map((d) => `${etiquetaDia(d.fecha, hoy)}: ${oculto ? 'oculto' : formatoSoles(d.monto)}`).join('; ');
@@ -19,19 +19,18 @@ export function barras7Dias(dias, hoy) {
   return s(
     'svg',
     { class: 'grafico', viewBox: `0 0 ${ANCHO} ${alto}`, role: 'img', 'aria-label': `Gasto de los últimos 7 días. ${descripcion}` },
-    s('line', { class: 'eje', x1: 0, x2: ANCHO, y1: base + 0.5, y2: base + 0.5 }),
     dias.map((d, i) => {
       const x = paso * i + paso / 2;
       const altura = d.monto === 0 ? 0 : Math.max(4, (d.monto / maximo) * (base - techo));
       const y = base - altura;
-      const r = Math.min(4, altura);
+      const r = Math.min(9, altura / 2);
       const esHoy = d.fecha === hoy;
       return [
         altura > 0 && s('path', {
           class: esHoy ? 'barra hoy' : 'barra',
-          d: `M${x - ancho / 2} ${base}V${y + r}Q${x - ancho / 2} ${y} ${x - ancho / 2 + r} ${y}H${x + ancho / 2 - r}Q${x + ancho / 2} ${y} ${x + ancho / 2} ${y + r}V${base}Z`,
+          d: `M${x - ancho / 2} ${base - r}V${y + r}A${r} ${r} 0 0 1 ${x - ancho / 2 + r} ${y}H${x + ancho / 2 - r}A${r} ${r} 0 0 1 ${x + ancho / 2} ${y + r}V${base - r}A${r} ${r} 0 0 1 ${x + ancho / 2 - r} ${base}H${x - ancho / 2 + r}A${r} ${r} 0 0 1 ${x - ancho / 2} ${base - r}Z`,
         }),
-        s('text', { class: 'valor', x, y: y - 6, 'text-anchor': 'middle' }, oculto ? '••' : formatoCorto(d.monto)),
+        s('text', { class: esHoy ? 'valor hoy' : 'valor', x, y: y - 7, 'text-anchor': 'middle' }, oculto ? '••' : formatoCorto(d.monto)),
         s('text', { class: esHoy ? 'dia hoy' : 'dia', x, y: alto - 6, 'text-anchor': 'middle' }, inicialDia(d.fecha)),
       ];
     }),

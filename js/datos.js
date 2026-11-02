@@ -2,35 +2,60 @@
 import { openDB } from '../vendor/idb.js';
 import { movimientosDeCuenta, ordenarMovimientos } from './calculos.js';
 import { fechaHoy } from './fechas.js';
+import { colorSiguiente } from './paleta.js';
 
 const ALMACENES = ['cuentas', 'movimientos', 'categorias', 'ajustes'];
 
-const cuentaInicial = (id, nombre, orden, extra = {}) => ({
+const cuentaInicial = (id, nombre, orden, color, extra = {}) => ({
   id, nombre, tipo: 'BANCO', saldoInicial: 0, lineaCredito: 0,
-  noSumarAlDisponible: false, orden, archivada: false, archivadaEn: '', ...extra,
+  noSumarAlDisponible: false, color, orden, archivada: false, archivadaEn: '', ...extra,
 });
 
 const CUENTAS_INICIALES = [
-  cuentaInicial('cta-yape', 'YAPE', 0),
-  cuentaInicial('cta-ahorros', 'AHORROS', 1),
-  cuentaInicial('cta-sueldo-bcp', 'SUELDO BCP', 2),
-  cuentaInicial('cta-sueldo-bbva', 'SUELDO BBVA', 3),
-  cuentaInicial('cta-independencia-bbva', 'INDEPENDENCIA BBVA', 4),
-  cuentaInicial('cta-cts-bbva', 'CTS BBVA', 5, { noSumarAlDisponible: true }),
-  cuentaInicial('cta-credito-bbva', 'CRÉDITO BBVA', 6, { tipo: 'TARJETA_CREDITO' }),
+  cuentaInicial('cta-yape', 'Yape', 0, 'lila'),
+  cuentaInicial('cta-ahorros', 'Ahorros', 1, 'durazno'),
+  cuentaInicial('cta-sueldo-bcp', 'Sueldo BCP', 2, 'azul'),
+  cuentaInicial('cta-sueldo-bbva', 'Sueldo BBVA', 3, 'celeste'),
+  cuentaInicial('cta-independencia-bbva', 'Independencia BBVA', 4, 'verde'),
+  cuentaInicial('cta-cts-bbva', 'CTS BBVA', 5, 'arena', { noSumarAlDisponible: true }),
+  cuentaInicial('cta-credito-bbva', 'Crédito BBVA', 6, 'rosa', { tipo: 'TARJETA_CREDITO' }),
 ];
 
-const categoriaInicial = (id, nombre, emoji, tipo, orden) => ({ id, nombre, emoji, tipo, orden, archivada: false });
+const categoriaInicial = (id, nombre, icono, tipo, orden, color) => ({
+  id, nombre, icono, tipo, orden, color, archivada: false,
+});
 
 const CATEGORIAS_INICIALES = [
-  categoriaInicial('cat-comida', 'Comida', '🍽️', 'GASTO', 0),
-  categoriaInicial('cat-pasajes', 'Pasajes', '🚌', 'GASTO', 1),
-  categoriaInicial('cat-taxi', 'Taxi', '🚕', 'GASTO', 2),
-  categoriaInicial('cat-salidas', 'Salidas', '🎉', 'GASTO', 3),
-  categoriaInicial('cat-otros', 'Otros', '❓', 'GASTO', 4),
-  categoriaInicial('cat-sueldo', 'Sueldo', '💼', 'INGRESO', 0),
-  categoriaInicial('cat-otros-ingresos', 'Otros ingresos', '➕', 'INGRESO', 1),
+  categoriaInicial('cat-comida', 'Comida', 'comida', 'GASTO', 0, 'durazno'),
+  categoriaInicial('cat-pasajes', 'Pasajes', 'bus', 'GASTO', 1, 'azul'),
+  categoriaInicial('cat-taxi', 'Taxi', 'auto', 'GASTO', 2, 'arena'),
+  categoriaInicial('cat-salidas', 'Salidas', 'estrella', 'GASTO', 3, 'lila'),
+  categoriaInicial('cat-otros', 'Otros', 'puntos', 'GASTO', 4, 'rosa'),
+  categoriaInicial('cat-sueldo', 'Sueldo', 'maletin', 'INGRESO', 0, 'verde'),
+  categoriaInicial('cat-otros-ingresos', 'Otros ingresos', 'mas', 'INGRESO', 1, 'celeste'),
 ];
+
+// Completa datos de versiones anteriores (cuentas sin color, categorías con emoji en vez de ícono).
+function completarCuenta(cuenta, i) {
+  if (cuenta.color) return cuenta;
+  const inicial = CUENTAS_INICIALES.find((c) => c.id === cuenta.id);
+  // Los nombres de la primera versión venían en mayúsculas; si no se cambiaron, se usan los nuevos.
+  const sinCambiar = inicial && cuenta.nombre === inicial.nombre.toUpperCase();
+  return { ...cuenta, nombre: sinCambiar ? inicial.nombre : cuenta.nombre, color: inicial?.color ?? colorSiguiente(i) };
+}
+
+function completarCategoria(categoria, i) {
+  if (categoria.icono && categoria.color) return categoria;
+  const { emoji, ...resto } = categoria;
+  const inicial = CATEGORIAS_INICIALES.find((c) => c.id === categoria.id);
+  return {
+    ...resto,
+    icono: categoria.icono ?? inicial?.icono ?? 'puntos',
+    color: categoria.color ?? inicial?.color ?? colorSiguiente(i),
+  };
+}
+
+const iguales = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
 // Estado en memoria. Las pantallas solo lo leen; se cambia con las funciones de abajo.
 export const E = { cuentas: [], movimientos: [], categorias: [], ajustes: {} };
@@ -98,7 +123,19 @@ export function nuevoId() {
 
 export async function iniciarDatos() {
   await recargar();
-  if (E.ajustes.sembrado) return;
+  if (E.ajustes.sembrado) {
+    const cuentas = E.cuentas.map(completarCuenta);
+    const categorias = E.categorias.map(completarCategoria);
+    const cambios = [
+      ...cuentas.filter((c, i) => !iguales(c, E.cuentas[i])).map((c) => ['cuentas', 'poner', c]),
+      ...categorias.filter((c, i) => !iguales(c, E.categorias[i])).map((c) => ['categorias', 'poner', c]),
+    ];
+    if (cambios.length) {
+      await escribir(cambios);
+      await recargar();
+    }
+    return;
+  }
   await escribir([
     ...CUENTAS_INICIALES.map((c) => ['cuentas', 'poner', c]),
     ...CATEGORIAS_INICIALES.map((c) => ['categorias', 'poner', c]),
@@ -151,6 +188,10 @@ export const guardarCuenta = (cuenta) => guardarEn('cuentas', cuenta);
 export const guardarCategoria = (categoria) => guardarEn('categorias', categoria);
 export const ordenNuevaCuenta = () => siguienteOrden(E.cuentas);
 export const ordenNuevaCategoria = () => siguienteOrden(E.categorias);
+export const colorNuevaCuenta = () => colorSiguiente(E.cuentas.length);
+export const colorNuevaCategoria = () => colorSiguiente(E.categorias.length);
+
+export const nombreUsuaria = () => E.ajustes.nombreUsuaria?.trim() || 'Carol';
 
 export const archivarCuenta = (cuenta) => guardarCuenta({ ...cuenta, archivada: true, archivadaEn: fechaHoy() });
 export const restaurarCuenta = (cuenta) => guardarCuenta({ ...cuenta, archivada: false, archivadaEn: '' });
@@ -204,6 +245,7 @@ export function armarCopia() {
     version: 1,
     exportadoEn: new Date().toISOString(),
     inicioApp: E.ajustes.inicioApp,
+    nombreUsuaria: nombreUsuaria(),
     cuentas: E.cuentas,
     categorias: E.categorias,
     movimientos: E.movimientos,
@@ -212,13 +254,15 @@ export function armarCopia() {
 
 // Reemplaza todo en una sola operación: si algo falla, los datos anteriores quedan intactos.
 export async function restaurarCopia(copia) {
-  const cuentas = copia.cuentas.map((c) => (
-    c.archivada && !c.archivadaEn ? { ...c, archivadaEn: fechaHoy() } : c
+  const cuentas = copia.cuentas.map((c, i) => completarCuenta(
+    c.archivada && !c.archivadaEn ? { ...c, archivadaEn: fechaHoy() } : c,
+    i,
   ));
   await escribir([
     ...['cuentas', 'movimientos', 'categorias'].map((a) => [a, 'vaciar']),
     ...cuentas.map((c) => ['cuentas', 'poner', c]),
-    ...copia.categorias.map((c) => ['categorias', 'poner', c]),
+    ...copia.categorias.map(completarCategoria).map((c) => ['categorias', 'poner', c]),
+    ...(copia.nombreUsuaria ? [['ajustes', 'poner', copia.nombreUsuaria, 'nombreUsuaria']] : []),
     ...copia.movimientos.map((m) => ['movimientos', 'poner', m]),
     ['ajustes', 'poner', true, 'bienvenidaHecha'],
     ['ajustes', 'poner', copia.inicioApp ?? fechaHoy(), 'inicioApp'],

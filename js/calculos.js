@@ -77,7 +77,7 @@ export function gastoPorCategoria(movimientos, categorias, desde, hasta) {
       return {
         id,
         nombre: categoria?.nombre ?? 'Sin categoría',
-        emoji: categoria?.emoji ?? '❓',
+        icono: categoria?.icono ?? 'puntos',
         monto,
         porcentaje: Math.round((monto / total) * 100),
       };
@@ -169,7 +169,9 @@ export function validarCopia(copia) {
   if (![cuentas, movimientos, categorias].every(Array.isArray)) return invalida;
   const cuentaOk = (c) => c?.id && typeof c.nombre === 'string' && TIPOS_CUENTA.includes(c.tipo)
     && Number.isInteger(c.saldoInicial) && Number.isInteger(c.lineaCredito) && Number.isInteger(c.orden);
-  const categoriaOk = (c) => c?.id && typeof c.nombre === 'string' && typeof c.emoji === 'string'
+  // Las copias antiguas traen "emoji"; las nuevas, "icono".
+  const categoriaOk = (c) => c?.id && typeof c.nombre === 'string'
+    && (typeof c.icono === 'string' || typeof c.emoji === 'string')
     && ['GASTO', 'INGRESO'].includes(c.tipo) && Number.isInteger(c.orden);
   if (!cuentas.every(cuentaOk) || !categorias.every(categoriaOk)) return invalida;
   const idsCuenta = new Set(cuentas.map((c) => c.id));

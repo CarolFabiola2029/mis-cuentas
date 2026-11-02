@@ -1,8 +1,11 @@
 // Pruebas automáticas de dinero, fechas y saldos. Se ejecutan abriendo tests/index.html.
 import { aCentimos, aTexto, formatoCorto, formatoSoles, teclear } from '../js/dinero.js';
 import {
-  etiquetaDia, fechaHoy, finDeMes, hora12, lunesDe, mesAnterior, serieExcel, sumarDias,
+  claveDiaSemana, etiquetaDia, fechaHoy, fechaSaludo, finDeMes, hora12, lunesDe, mesAnterior, serieExcel, sumarDias,
 } from '../js/fechas.js';
+import { fraseDelDia } from '../js/frase.js';
+import { frasesPorDia, generales } from '../js/frases.js';
+import { siglasCuentas } from '../js/ui.js';
 import {
   agruparPorDia, deudaTarjeta, gastoPorCategoria, gastosHoySemanaMes, normalizarMovimiento,
   ordenarMovimientos, primerMes, saldosPorCuenta, serieMes, totalDisponible, totalEnFecha,
@@ -31,8 +34,10 @@ igual('formato con miles', formatoSoles(123456), 'S/ 1,234.56');
 igual('formato millones', formatoSoles(123456789), 'S/ 1,234,567.89');
 igual('formato céntimos', formatoSoles(5), 'S/ 0.05');
 igual('formato negativo', formatoSoles(-1050), '−S/ 10.50');
-igual('corto bajo 100 con decimales', formatoCorto(4550), '45.50');
+igual('corto bajo 100 con decimales', formatoCorto(4550), '45.5');
+igual('corto bajo 100 exacto', formatoCorto(1800), '18');
 igual('corto 99.99', formatoCorto(9999), '99.99');
+igual('corto 10 no pierde el cero entero', formatoCorto(1000), '10');
 igual('corto desde 100 sin decimales', formatoCorto(10000), '100');
 igual('corto con miles', formatoCorto(123460), '1,235');
 igual('corto cero', formatoCorto(0), '0');
@@ -183,6 +188,60 @@ igual('serie Excel', serieExcel('2026-11-01'), 46327);
   igual('copia nula', validarCopia(null) !== null, true);
   igual('copia con monto decimal', validarCopia({ ...buena, movimientos: [{ ...buena.movimientos[0], monto: 10.5 }] }) !== null, true);
   igual('copia con cuenta inexistente', validarCopia({ ...buena, movimientos: [{ ...buena.movimientos[0], cuentaId: 'zzz' }] }) !== null, true);
+}
+
+// --- Frase del día ---
+{
+  const banco = { frasesPorDia, generales, fechasEspeciales: { '02-14': 'Especial' } };
+  let semilla = 7;
+  const azar = () => { semilla = (semilla * 16807) % 2147483647; return semilla / 2147483647; };
+  const primera = fraseDelDia('2026-11-02', [], banco, azar);
+  const otraVez = fraseDelDia('2026-11-02', primera.historial, banco, azar);
+  igual('misma fecha = misma frase', otraVez.texto, primera.texto);
+  igual('no duplica el historial', otraVez.historial.length, 1);
+
+  let historial = [];
+  let fecha = '2026-01-01';
+  let anterior = null;
+  let repetidaAyer = 0;
+  let repetidaSemana = 0;
+  let especial = '';
+  let fueraDeDia = 0;
+  const todasDelDia = new Set(Object.values(frasesPorDia).flat());
+  for (let i = 0; i < 400; i += 1) {
+    const r = fraseDelDia(fecha, historial, banco, azar);
+    if (r.texto === anterior) repetidaAyer += 1;
+    const semana = historial.filter((h) => h.fecha >= sumarDias(fecha, -7)).map((h) => h.texto);
+    if (semana.includes(r.texto)) repetidaSemana += 1;
+    if (fecha.endsWith('02-14')) especial = r.texto;
+    else if (todasDelDia.has(r.texto) && !frasesPorDia[claveDiaSemana(fecha)].includes(r.texto)) fueraDeDia += 1;
+    historial = r.historial;
+    anterior = r.texto;
+    fecha = sumarDias(fecha, 1);
+  }
+  igual('día siguiente = frase distinta', repetidaAyer, 0);
+  igual('sin repetir en 7 días', repetidaSemana, 0);
+  igual('fecha especial tiene prioridad', especial, 'Especial');
+  igual('frase de día correcto', fueraDeDia, 0);
+  igual('historial limitado', historial.length <= 31, true);
+  igual('clave miércoles sin tilde', claveDiaSemana('2026-11-04'), 'miercoles');
+  igual('clave sábado sin tilde', claveDiaSemana('2026-11-07'), 'sabado');
+  igual('saludo con fecha', fechaSaludo('2026-11-02'), 'Lunes, 2 de noviembre');
+}
+{
+  const nueva = {
+    app: 'mis-cuentas', version: 1, cuentas: [banco('a', 0, { color: 'lila' })],
+    categorias: [{ id: 'c', nombre: 'x', icono: 'comida', color: 'rosa', tipo: 'GASTO', orden: 0 }],
+    movimientos: [],
+  };
+  igual('copia con íconos válida', validarCopia(nueva), null);
+  igual('copia sin ícono ni emoji', validarCopia({ ...nueva, categorias: [{ id: 'c', nombre: 'x', tipo: 'GASTO', orden: 0 }] }) !== null, true);
+}
+
+{
+  const nombres = ['Yape', 'Ahorros', 'Sueldo BCP', 'Sueldo BBVA', 'Independencia BBVA', 'CTS BBVA', 'Ñ'];
+  const siglas = siglasCuentas(nombres.map((nombre, i) => ({ id: String(i), nombre })));
+  igual('siglas como el diseño', [...siglas.values()], ['YA', 'AH', 'SB', 'SV', 'IN', 'CT', 'Ñ']);
 }
 
 const fallidas = resultados.filter((r) => !r.ok);

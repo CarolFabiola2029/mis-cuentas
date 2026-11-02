@@ -14,6 +14,17 @@ const aUTC = (iso) => {
 const deUTC = (f) => `${f.getUTCFullYear()}-${dos(f.getUTCMonth() + 1)}-${dos(f.getUTCDate())}`;
 
 export const fechaHoy = (d = new Date()) => `${d.getFullYear()}-${dos(d.getMonth() + 1)}-${dos(d.getDate())}`;
+
+// Fecha en Lima, aunque el teléfono tenga otra zona horaria (para la frase del día).
+export function fechaLima(d = new Date()) {
+  try {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Lima', year: 'numeric', month: '2-digit', day: '2-digit',
+    }).format(d);
+  } catch {
+    return fechaHoy(d);
+  }
+}
 export const horaAhora = (d = new Date()) => `${dos(d.getHours())}:${dos(d.getMinutes())}`;
 
 export function sumarDias(iso, n) {
@@ -43,6 +54,16 @@ export const nombreMes = (iso) => {
 };
 
 export const inicialDia = (iso) => DIAS[aUTC(iso).getUTCDay()][0].toUpperCase();
+
+// 'lunes', 'miercoles', 'sabado'…: sin tildes, para usarlo como clave en frases.js.
+export const claveDiaSemana = (iso) => DIAS[aUTC(iso).getUTCDay()].normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+// "Lunes, 2 de noviembre"
+export function fechaSaludo(iso) {
+  const f = aUTC(iso);
+  const dia = DIAS[f.getUTCDay()];
+  return `${dia[0].toUpperCase()}${dia.slice(1)}, ${f.getUTCDate()} de ${MESES[f.getUTCMonth()]}`;
+}
 
 export function fechaLarga(iso, hoy) {
   const f = aUTC(iso);

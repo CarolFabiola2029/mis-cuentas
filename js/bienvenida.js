@@ -1,18 +1,24 @@
 // Pantalla del primer arranque.
 import { botonRestaurar } from './ajustes.js';
 import { esTarjeta } from './calculos.js';
-import { completarBienvenida, E } from './datos.js';
+import { completarBienvenida, E, nombreUsuaria } from './datos.js';
 import { aCentimos } from './dinero.js';
-import { campo, campoMonto, h } from './ui.js';
+import { campoMonto, cuadroCuenta, h } from './ui.js';
 
 export function pantallaBienvenida(alTerminar) {
   const entradas = new Map(E.cuentas.map((c) => [c.id, { saldo: '', linea: '' }]));
   const error = h('p', { class: 'error', role: 'alert' });
 
-  const campoDe = (cuenta, clave, texto) => campo(texto, campoMonto({
-    'aria-label': `${cuenta.nombre}: ${texto}`,
-    oninput: (e) => { entradas.get(cuenta.id)[clave] = e.target.value; },
-  }));
+  const campoDe = (cuenta, clave, texto, conCuadro = true) => h(
+    'label',
+    { class: 'campo-cuenta' },
+    conCuadro ? cuadroCuenta(cuenta) : h('span', { class: 'cuadro-vacio' }),
+    h('span', { class: 'campo-titulo' }, texto),
+    campoMonto({
+      'aria-label': `${cuenta.nombre}: ${texto}`,
+      oninput: (e) => { entradas.get(cuenta.id)[clave] = e.target.value; },
+    }),
+  );
 
   const leer = (texto) => (texto.trim() === '' ? 0 : aCentimos(texto));
 
@@ -43,16 +49,14 @@ export function pantallaBienvenida(alTerminar) {
   return h(
     'div',
     { class: 'bienvenida' },
-    h('h1', {}, 'Mis Cuentas'),
-    h('p', {}, 'Ingresa cuánto tienes hoy en cada cuenta. Si dejas un campo vacío queda en S/ 0.00, y todo se puede cambiar después en Ajustes.'),
-    h('section', { class: 'tarjeta' }, E.cuentas.map((c) => (esTarjeta(c)
-      ? h(
-        'div',
-        { class: 'bloque-tarjeta' },
-        h('strong', {}, c.nombre),
-        campoDe(c, 'linea', 'Línea total (S/)'),
-        campoDe(c, 'saldo', 'Línea disponible (S/)'),
-      )
+    h('h1', { class: 'titulo' }, `Hola, ${nombreUsuaria()}.`),
+    h('p', { class: 'bienvenida-texto' }, 'Ingresa cuánto tienes hoy en cada cuenta.'),
+    h('p', { class: 'nota' }, 'Si dejas un campo vacío queda en S/ 0.00. Todo se puede cambiar después en Ajustes.'),
+    h('section', { class: 'tarjeta lista-bienvenida' }, E.cuentas.map((c) => (esTarjeta(c)
+      ? [
+        campoDe(c, 'linea', `${c.nombre}: línea total`),
+        campoDe(c, 'saldo', 'Línea disponible', false),
+      ]
       : campoDe(c, 'saldo', c.nombre)))),
     error,
     h('button', { type: 'button', class: 'boton primario', onclick: empezar }, 'Empezar'),

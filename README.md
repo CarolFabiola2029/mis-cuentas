@@ -10,7 +10,7 @@ Hace falta iOS 16 o superior.
 2. Toca el botón **Compartir** (el cuadrado con una flecha hacia arriba).
 3. Baja y toca **Agregar a inicio**, y luego **Agregar**.
 4. Abre la app **desde el nuevo ícono** de la pantalla de inicio.
-5. Escribe cuánto tienes hoy en cada cuenta y toca **Empezar**.
+5. En "Hola, Carol", escribe cuánto tienes hoy en cada cuenta y toca **Empezar**.
 
 > **Importante:** Safari y el ícono guardan datos por separado. Si registras algo en Safari, no aparecerá en el ícono. Usa siempre el ícono.
 
@@ -34,6 +34,38 @@ Si pasan más de 7 días sin copia, el Resumen muestra un aviso con un botón pa
 - En el iPhone: Ajustes → Safari → Borrar historial y datos de sitios web.
 
 Antes de hacer cualquiera de las dos cosas, haz una copia.
+
+## Frases del corazón
+
+Al tocar el corazón junto a "Hola, Carol" aparece la frase del día, firmada por Andrés. Es una frase por día: se elige la primera vez que se toca el corazón y se mantiene igual hasta la medianoche (hora de Lima).
+
+- Unas 2 de cada 3 veces sale una frase del día de la semana; las demás, una general.
+- Nunca se repite la del día anterior, y se evita repetir las de los últimos 7 días.
+- Si ese día hay una fecha especial, sale esa frase.
+
+### Cómo agregar o cambiar frases
+1. Abre `js/frases.js` con el **Bloc de notas** (clic derecho → Abrir con → Bloc de notas).
+2. Cada frase va en su propia línea, **entre comillas simples y con una coma al final**:
+   ```
+   'Te amo más de lo que esta app puede contar, mi pinteta 💖',
+   ```
+3. Para agregar una frase, copia una línea completa, pégala debajo y cambia solo el texto de adentro.
+4. No uses la comilla simple `'` dentro de una frase, porque la corta. Si necesitas un apóstrofo, usa `’`.
+5. Guarda con **Archivo → Guardar**.
+
+### Cómo agregar fechas especiales (cumpleaños, aniversario…)
+En la parte de abajo de `js/frases.js` está `fechasEspeciales`. Agrega una línea por fecha, con **mes y día de dos cifras**:
+```
+export const fechasEspeciales = {
+  '08-25': '¡Feliz cumpleaños, mi niña! Hoy el mundo celebra que existes 🎂💖',
+  '03-14': 'Feliz aniversario, mi amor. Gracias por cada día ❤️',
+};
+```
+Las líneas que empiezan con `//` son ejemplos y no se usan: puedes borrarlas o dejarlas.
+
+### Revisar y publicar
+1. Haz doble clic en `servir.bat`, abre <http://localhost:8000> y toca el corazón. Si la app no carga, revisa que no falte una comilla o una coma.
+2. Haz doble clic en `publicar.bat`.
 
 ## Exportar a Excel
 
@@ -95,6 +127,10 @@ Usa siempre `publicar.bat`: además de subir los cambios, cambia el número de v
 | `js/registro.js`, `js/editar.js` | Registro rápido y edición |
 | `js/resumen.js`, `js/evolucion.js`, `js/ajustes.js`, `js/bienvenida.js` | Pantallas |
 | `js/graficos.js` | Gráficos SVG |
+| `js/frases.js` | Las frases del corazón y las fechas especiales (para editar) |
+| `js/frase.js` | Cómo se elige la frase del día |
+| `js/iconos.js`, `js/paleta.js` | Íconos de línea y colores de cuentas y categorías |
+| `fonts/` | Playfair Display y Nunito Sans (incluidas para funcionar sin internet) |
 | `js/respaldo.js` | Copia de seguridad y Excel |
 | `sw.js`, `manifest.webmanifest`, `icons/` | Instalación y modo sin internet |
 | `vendor/` | Librerías incluidas: idb 8.0.3 y SheetJS 0.20.3 |
