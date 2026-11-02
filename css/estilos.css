@@ -191,6 +191,21 @@ main {
 .relleno { height: 100%; border-radius: 999px; background: var(--acento); transition: width 0.3s; }
 .tarjeta-relleno { background: #E58FAD; }
 
+/* Límites */
+.limites { gap: 0; padding: 6px 16px; }
+.limite { padding: 12px 0; border-top: 1px solid var(--separador); }
+.limite:first-child { border-top: 0; }
+.limite-fila { display: flex; align-items: center; gap: 12px; }
+.limite-texto { flex: 1; min-width: 0; }
+.limite-texto strong { display: block; font-weight: 700; }
+.limite .pista { margin-top: 10px; }
+.limite.excedido .relleno { background: var(--gasto); }
+.limite-exceso { margin-top: 6px; color: var(--gasto); font-weight: 700; }
+.pildora-limite {
+  flex: none; padding: 3px 10px; border-radius: 999px; background: #FBE1E6; color: var(--gasto);
+  font-size: 12px; font-weight: 800;
+}
+
 /* En qué se fue este mes */
 .categorias { display: flex; flex-direction: column; gap: 14px; }
 .categoria-fila { display: flex; justify-content: space-between; gap: 12px; font-size: 15px; }

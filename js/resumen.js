@@ -9,6 +9,7 @@ import { etiquetaDia, fechaHoy, fechaLima, fechaSaludo, hora12, inicioDeMes, sum
 import { fraseDelDia } from './frase.js';
 import * as frases from './frases.js';
 import { barras7Dias } from './graficos.js';
+import { bloqueLimitesResumen } from './limites.js';
 import { hacerCopia } from './respaldo.js';
 import {
   cuadroCuenta, cuadroIcono, h, icono, iniciales, monto, pestanas, seccion,
@@ -286,6 +287,7 @@ export function pantallaResumen(repintar) {
         : h('p', { class: 'vacio' }, 'No hay cuentas activas. Agrega una en Ajustes.'),
     ),
     seccion('Últimos 7 días', h('div', { class: 'tarjeta' }, barras7Dias(ultimos7Dias(E.movimientos, hoy), hoy))),
+    bloqueLimitesResumen(),
     seccion('En qué se fue este mes', h('div', { class: 'tarjeta' }, bloqueCategorias(hoy))),
     seccion('Movimientos', h('div', { class: 'bloque-movimientos' }, bloqueMovimientos(hoy))),
   ];

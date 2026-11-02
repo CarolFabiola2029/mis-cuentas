@@ -3,6 +3,7 @@ import { esTarjeta, normalizarMovimiento, saldosPorCuenta, validarMovimiento } f
 import { E, guardarMovimiento, nuevoId } from './datos.js';
 import { aCentimos, formatoSoles, teclear } from './dinero.js';
 import { fechaHoy, horaAhora } from './fechas.js';
+import { revisarLimites } from './limites.js';
 import {
   abrirCapa, aviso, campo, cuadroCuenta, cuadroIcono, h, icono, monto, vibrar,
 } from './ui.js';
@@ -168,6 +169,7 @@ export function abrirRegistro(tipo) {
         cerrar();
         vibrar();
         aviso(`${flujo.aviso}: ${monto(m.monto)}`, `exito ${flujo.clase}`);
+        revisarLimites(m);
       } catch {
         guardando = false;
         botonGuardar.disabled = false;

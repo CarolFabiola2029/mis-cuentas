@@ -30,7 +30,8 @@ const CATEGORIAS_INICIALES = [
   categoriaInicial('cat-pasajes', 'Pasajes', 'bus', 'GASTO', 1, 'azul'),
   categoriaInicial('cat-taxi', 'Taxi', 'auto', 'GASTO', 2, 'arena'),
   categoriaInicial('cat-salidas', 'Salidas', 'estrella', 'GASTO', 3, 'lila'),
-  categoriaInicial('cat-otros', 'Otros', 'puntos', 'GASTO', 4, 'rosa'),
+  categoriaInicial('cat-dulces', 'Dulces', 'dulce', 'GASTO', 4, 'rosa'),
+  categoriaInicial('cat-otros', 'Otros', 'puntos', 'GASTO', 5, 'durazno'),
   categoriaInicial('cat-sueldo', 'Sueldo', 'maletin', 'INGRESO', 0, 'verde'),
   categoriaInicial('cat-otros-ingresos', 'Otros ingresos', 'mas', 'INGRESO', 1, 'celeste'),
 ];
@@ -130,6 +131,15 @@ export async function iniciarDatos() {
       ...cuentas.filter((c, i) => !iguales(c, E.cuentas[i])).map((c) => ['cuentas', 'poner', c]),
       ...categorias.filter((c, i) => !iguales(c, E.categorias[i])).map((c) => ['categorias', 'poner', c]),
     ];
+    // Dulces llegó en una versión posterior: se agrega una sola vez (si luego la borran, no vuelve).
+    if (!E.ajustes.dulcesAgregada) {
+      const yaExiste = E.categorias.some((c) => c.id === 'cat-dulces' || c.nombre.trim().toLowerCase() === 'dulces');
+      if (!yaExiste) {
+        const dulces = CATEGORIAS_INICIALES.find((c) => c.id === 'cat-dulces');
+        cambios.push(['categorias', 'poner', { ...dulces, orden: siguienteOrden(E.categorias) }]);
+      }
+      cambios.push(['ajustes', 'poner', true, 'dulcesAgregada']);
+    }
     if (cambios.length) {
       await escribir(cambios);
       await recargar();
@@ -141,6 +151,7 @@ export async function iniciarDatos() {
     ...CATEGORIAS_INICIALES.map((c) => ['categorias', 'poner', c]),
     ['ajustes', 'poner', fechaHoy(), 'inicioApp'],
     ['ajustes', 'poner', true, 'sembrado'],
+    ['ajustes', 'poner', true, 'dulcesAgregada'],
   ]);
   await recargar();
 }
@@ -193,6 +204,9 @@ export const colorNuevaCategoria = () => colorSiguiente(E.categorias.length);
 
 export const nombreUsuaria = () => E.ajustes.nombreUsuaria?.trim() || 'Carol';
 
+export const limites = () => E.ajustes.limites ?? [];
+export const guardarLimites = (lista) => ponerAjuste('limites', lista);
+
 export const archivarCuenta = (cuenta) => guardarCuenta({ ...cuenta, archivada: true, archivadaEn: fechaHoy() });
 export const restaurarCuenta = (cuenta) => guardarCuenta({ ...cuenta, archivada: false, archivadaEn: '' });
 export const fijarArchivoCategoria = (categoria, archivada) => guardarCategoria({ ...categoria, archivada });
@@ -215,9 +229,11 @@ export async function eliminarCategoria(id, reemplazoId = null) {
   const pasados = E.movimientos
     .filter((m) => m.categoriaId === id)
     .map((m) => ({ ...m, categoriaId: reemplazoId, editadoEn: ahora }));
+  // Sus límites se van con ella.
   await escribir([
     ['categorias', 'borrar', id],
     ...(reemplazoId ? pasados.map((m) => ['movimientos', 'poner', m]) : []),
+    ['ajustes', 'poner', limites().filter((l) => l.categoriaId !== id), 'limites'],
   ]);
   await recargar();
   avisar();
@@ -246,6 +262,7 @@ export function armarCopia() {
     exportadoEn: new Date().toISOString(),
     inicioApp: E.ajustes.inicioApp,
     nombreUsuaria: nombreUsuaria(),
+    limites: limites(),
     cuentas: E.cuentas,
     categorias: E.categorias,
     movimientos: E.movimientos,
@@ -263,6 +280,8 @@ export async function restaurarCopia(copia) {
     ...cuentas.map((c) => ['cuentas', 'poner', c]),
     ...copia.categorias.map(completarCategoria).map((c) => ['categorias', 'poner', c]),
     ...(copia.nombreUsuaria ? [['ajustes', 'poner', copia.nombreUsuaria, 'nombreUsuaria']] : []),
+    ['ajustes', 'poner', copia.limites ?? [], 'limites'],
+    ['ajustes', 'poner', true, 'dulcesAgregada'],
     ...copia.movimientos.map((m) => ['movimientos', 'poner', m]),
     ['ajustes', 'poner', true, 'bienvenidaHecha'],
     ['ajustes', 'poner', copia.inicioApp ?? fechaHoy(), 'inicioApp'],

@@ -7,7 +7,8 @@ import { fraseDelDia } from '../js/frase.js';
 import { frasesPorDia, generales } from '../js/frases.js';
 import { siglasCuentas } from '../js/ui.js';
 import {
-  agruparPorDia, deudaTarjeta, gastoPorCategoria, gastosHoySemanaMes, normalizarMovimiento,
+  agruparPorDia, deudaTarjeta, estadoLimites, gastoPorCategoria, gastosHoySemanaMes, limitesPasadosPor,
+  normalizarMovimiento, rangoPeriodo,
   ordenarMovimientos, primerMes, saldosPorCuenta, serieMes, totalDisponible, totalEnFecha,
   ultimos7Dias, validarCopia, validarMovimiento,
 } from '../js/calculos.js';
@@ -242,6 +243,34 @@ igual('serie Excel', serieExcel('2026-11-01'), 46327);
   const nombres = ['Yape', 'Ahorros', 'Sueldo BCP', 'Sueldo BBVA', 'Independencia BBVA', 'CTS BBVA', 'Ñ'];
   const siglas = siglasCuentas(nombres.map((nombre, i) => ({ id: String(i), nombre })));
   igual('siglas como el diseño', [...siglas.values()], ['YA', 'AH', 'SB', 'SV', 'IN', 'CT', 'Ñ']);
+}
+
+// --- Límites de gasto ---
+{
+  const dulce = (monto, fecha, extra = {}) => mov('GASTO', monto, fecha, 'a', { categoriaId: 'dulces', ...extra });
+  const limite = { id: 'l1', categoriaId: 'dulces', monto: 1000, periodo: 'MES' };
+  const justo = [dulce(600, '2026-11-02'), dulce(400, '2026-11-05')];
+  igual('S/ 10.00 exacto no se pasa', estadoLimites([limite], justo, '2026-11-05')[0].excedido, false);
+  const pasado = [...justo, dulce(10, '2026-11-06')];
+  const e = estadoLimites([limite], pasado, '2026-11-06')[0];
+  igual('S/ 10.10 sí se pasa', [e.excedido, e.gastado, e.exceso], [true, 1010, 10]);
+  igual('mes anterior no cuenta', estadoLimites([limite], [dulce(5000, '2026-10-31'), ...justo], '2026-11-05')[0].excedido, false);
+  igual('otra categoría no cuenta', estadoLimites([limite], [...justo, mov('GASTO', 500, '2026-11-05', 'a', { categoriaId: 'comida' })], '2026-11-05')[0].gastado, 1000);
+  igual('ingreso en la categoría no cuenta', estadoLimites([limite], [...justo, mov('INGRESO', 500, '2026-11-05', 'a', { categoriaId: 'dulces' })], '2026-11-05')[0].excedido, false);
+  igual('rango semana lunes a domingo', rangoPeriodo('SEMANA', '2026-11-04'), { desde: '2026-11-02', hasta: '2026-11-08' });
+  igual('rango día', rangoPeriodo('DIA', '2026-11-04'), { desde: '2026-11-04', hasta: '2026-11-04' });
+  igual('rango mes', rangoPeriodo('MES', '2026-02-10'), { desde: '2026-02-01', hasta: '2026-02-28' });
+  const ultimo = dulce(10, '2026-11-06');
+  igual('aviso al guardar el gasto que lo pasa', limitesPasadosPor(ultimo, [limite], [...justo, ultimo]).length, 1);
+  igual('sin aviso para otra categoría', limitesPasadosPor(mov('GASTO', 9999, '2026-11-06', 'a', { categoriaId: 'comida' }), [limite], pasado).length, 0);
+  const diario = { ...limite, periodo: 'DIA' };
+  igual('límite diario se reinicia cada día', estadoLimites([diario], pasado, '2026-11-07')[0].gastado, 0);
+  const copia = {
+    app: 'mis-cuentas', version: 1, cuentas: [banco('a', 0)], movimientos: [],
+    categorias: [{ id: 'dulces', nombre: 'Dulces', icono: 'dulce', tipo: 'GASTO', orden: 0 }],
+  };
+  igual('copia con límites válida', validarCopia({ ...copia, limites: [limite] }), null);
+  igual('copia con límite decimal inválida', validarCopia({ ...copia, limites: [{ ...limite, monto: 10.5 }] }) !== null, true);
 }
 
 const fallidas = resultados.filter((r) => !r.ok);

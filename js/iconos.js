@@ -44,12 +44,13 @@ const DIBUJOS = {
   pesa: [p('M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11')],
   brillo: [p('M11 3l1.8 5.2L18 10l-5.2 1.8L11 17l-1.8-5.2L4 10l5.2-1.8z'), p('M19 15v5M16.5 17.5h5')],
   pelicula: [r(3, 5, 18, 14, 2.5), p('M3 9.5h18'), p('M8 5l2 4.5M13 5l2 4.5')],
+  dulce: [c(12, 12, 4), p('M8.3 10.6L4.5 8.3v7.4l3.8-2.3'), p('M15.7 10.6l3.8-2.3v7.4l-3.7-2.3'), p('M10.5 10.5l3 3')],
   gasolina: [p('M4 20.5v-15A1.5 1.5 0 0 1 5.5 4h7A1.5 1.5 0 0 1 14 5.5v15M3 20.5h12M7 8h4'), p('M14 10h2a1.5 1.5 0 0 1 1.5 1.5V16a1.5 1.5 0 0 0 3 0V8.5L18 6')],
 };
 
 // Íconos que se pueden elegir para una categoría, con su nombre para lectores de pantalla.
 export const ICONOS_CATEGORIA = [
-  ['comida', 'Comida'], ['carrito', 'Compras'], ['cafe', 'Café'], ['bus', 'Bus'], ['auto', 'Auto'],
+  ['comida', 'Comida'], ['dulce', 'Dulces'], ['carrito', 'Compras'], ['cafe', 'Café'], ['bus', 'Bus'], ['auto', 'Auto'],
   ['gasolina', 'Gasolina'], ['estrella', 'Estrella'], ['pelicula', 'Película'], ['ropa', 'Ropa'],
   ['brillo', 'Belleza'], ['salud', 'Salud'], ['casa', 'Casa'], ['foco', 'Servicios'], ['telefono', 'Teléfono'],
   ['regalo', 'Regalo'], ['corazon', 'Corazón'], ['libro', 'Estudios'], ['viaje', 'Viaje'], ['mascota', 'Mascota'],

@@ -7,6 +7,7 @@ import {
 } from './datos.js';
 import { aCentimos, aTexto, formatoSoles } from './dinero.js';
 import { ICONOS_CATEGORIA } from './iconos.js';
+import { seccionLimitesAjustes } from './limites.js';
 import { cargarXlsx, exportarExcel, hacerCopia, restaurarDesdeArchivo } from './respaldo.js';
 import {
   abrirCapa, aviso, campo, campoMonto, confirmar, cuadroCuenta, cuadroIcono, h, icono, informar, monto, pestanas, preguntar,
@@ -405,6 +406,7 @@ export function pantallaAjustes(repintar) {
     seccionNombre(),
     seccionCuentas(),
     seccionCategorias(repintar),
+    seccionLimitesAjustes(),
     seccionRespaldo(),
     seccionExcel(),
   ];

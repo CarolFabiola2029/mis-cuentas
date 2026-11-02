@@ -35,6 +35,19 @@ Si pasan más de 7 días sin copia, el Resumen muestra un aviso con un botón pa
 
 Antes de hacer cualquiera de las dos cosas, haz una copia.
 
+## Límites de gasto
+
+Sirven para ponerle un tope a una categoría, por ejemplo **S/ 10.00 al mes en Dulces**.
+
+1. Ve a **Ajustes → Límites de gasto → + Agregar límite**.
+2. Elige la categoría, escribe el monto y elige el periodo: **Día**, **Semana** (de lunes a domingo) o **Mes**.
+3. Toca **Guardar**.
+
+- Cuando un gasto hace que la categoría **pase** el límite, aparece un anuncio. Con un límite de S/ 10.00, llegar justo a S/ 10.00 no avisa; llegar a S/ 10.10 sí.
+- En el Resumen, la sección **Mis límites** muestra cuánto llevas de cada límite; la barra se pone roja si te pasaste.
+- Para cambiar o quitar un límite, tócalo en Ajustes.
+- Los límites también se guardan en la copia de seguridad.
+
 ## Frases del corazón
 
 Al tocar el corazón junto a "Hola, Carol" aparece la frase del día, firmada por Andrés. Es una frase por día: se elige la primera vez que se toca el corazón y se mantiene igual hasta la medianoche (hora de Lima).
@@ -129,6 +142,7 @@ Usa siempre `publicar.bat`: además de subir los cambios, cambia el número de v
 | `js/graficos.js` | Gráficos SVG |
 | `js/frases.js` | Las frases del corazón y las fechas especiales (para editar) |
 | `js/frase.js` | Cómo se elige la frase del día |
+| `js/limites.js` | Límites de gasto: ajustes, anuncio y barras del Resumen |
 | `js/iconos.js`, `js/paleta.js` | Íconos de línea y colores de cuentas y categorías |
 | `fonts/` | Playfair Display y Nunito Sans (incluidas para funcionar sin internet) |
 | `js/respaldo.js` | Copia de seguridad y Excel |

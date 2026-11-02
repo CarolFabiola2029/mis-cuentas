@@ -162,6 +162,52 @@ export function validarMovimiento(m, hoy) {
 }
 
 // Revisa una copia de seguridad antes de tocar los datos actuales.
+// --- Límites de gasto ---
+// Un límite: { id, categoriaId, monto (céntimos), periodo: 'DIA' | 'SEMANA' | 'MES' }
+
+export const PERIODOS = { DIA: 'Por día', SEMANA: 'Por semana', MES: 'Por mes' };
+export const PERIODOS_FRASE = { DIA: 'hoy', SEMANA: 'esta semana', MES: 'este mes' };
+
+// Días que abarca el periodo que contiene la fecha (la semana va de lunes a domingo).
+export function rangoPeriodo(periodo, fecha) {
+  if (periodo === 'DIA') return { desde: fecha, hasta: fecha };
+  if (periodo === 'SEMANA') {
+    const lunes = lunesDe(fecha);
+    return { desde: lunes, hasta: sumarDias(lunes, 6) };
+  }
+  return { desde: inicioDeMes(fecha), hasta: finDeMes(fecha) };
+}
+
+// Cuánto se lleva gastado de cada límite en el periodo que contiene "fecha".
+// Se pasa solo si el gasto supera el límite: con S/ 10.00 de límite, 10.00 no avisa y 10.10 sí.
+export function estadoLimites(limites, movimientos, fecha) {
+  return limites.map((limite) => {
+    const { desde, hasta } = rangoPeriodo(limite.periodo, fecha);
+    const gastado = movimientos
+      .filter((m) => m.tipo === 'GASTO' && m.categoriaId === limite.categoriaId && m.fecha >= desde && m.fecha <= hasta)
+      .reduce((total, m) => total + m.monto, 0);
+    return {
+      limite,
+      gastado,
+      excedido: gastado > limite.monto,
+      exceso: Math.max(0, gastado - limite.monto),
+      porcentaje: limite.monto > 0 ? (gastado / limite.monto) * 100 : 0,
+    };
+  });
+}
+
+// Límites que quedaron pasados por un gasto recién guardado o editado.
+export const limitesPasadosPor = (movimiento, limites, movimientos) => (
+  movimiento.tipo !== 'GASTO' ? [] : estadoLimites(
+    limites.filter((l) => l.categoriaId === movimiento.categoriaId),
+    movimientos,
+    movimiento.fecha,
+  ).filter((e) => e.excedido)
+);
+
+const limiteOk = (l) => l?.id && typeof l.categoriaId === 'string'
+  && Number.isInteger(l.monto) && l.monto > 0 && Object.hasOwn(PERIODOS, l.periodo);
+
 export function validarCopia(copia) {
   const invalida = 'Este archivo no es una copia válida de Mis Cuentas.';
   if (copia?.app !== 'mis-cuentas' || copia.version !== 1) return invalida;
@@ -179,5 +225,6 @@ export function validarCopia(copia) {
     && validarMovimiento(m, '9999-12-31') === null
     && idsCuenta.has(m.cuentaId)
     && (m.tipo !== 'TRANSFERENCIA' || idsCuenta.has(m.cuentaDestinoId));
+  if (copia.limites !== undefined && !(Array.isArray(copia.limites) && copia.limites.every(limiteOk))) return invalida;
   return movimientos.every(movimientoOk) ? null : invalida;
 }

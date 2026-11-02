@@ -3,6 +3,7 @@ import { normalizarMovimiento, validarMovimiento } from './calculos.js';
 import { E, eliminarMovimiento, guardarMovimiento } from './datos.js';
 import { aCentimos, aTexto } from './dinero.js';
 import { fechaHoy } from './fechas.js';
+import { revisarLimites } from './limites.js';
 import {
   abrirCapa, aviso, campo, campoMonto, confirmar, h, icono, opcionesSelect, vibrar,
 } from './ui.js';
@@ -43,6 +44,7 @@ export function abrirEdicion(original) {
       cerrar();
       vibrar();
       aviso('Movimiento actualizado', 'exito');
+      revisarLimites(m);
     } catch {
       guardando = false;
       botonGuardar.disabled = false;
